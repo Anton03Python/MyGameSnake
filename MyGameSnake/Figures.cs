@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 
 namespace MyGameSnake
 {
-    class Coord
+    public enum Figures
     {
-        public int X;
-        public int Y;
-        public Coord(int x, int y)
-        {
-            X = x; Y = y;
-        }
+        StartPosition = 0,
+        EmptySpace = -1,
+        Destination = -2,
+        Path = -3,
+        Barrier = -4
     }
 }
