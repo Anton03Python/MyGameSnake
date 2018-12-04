@@ -94,11 +94,13 @@ namespace MyGameSnake
                 if (result == DialogResult.Yes)
                 {
                     snake.Clear();
-                    timer.Start();
                     snake.Add(new Coord(W / 2, H / 3));
                     snake.Add(new Coord(W / 2, H / 2));
                     snake.Add(new Coord(W / 2, H / 1));
+                    snake[0].X = W;
+                    snake[0].Y = H;
                     apple = new Coord(rand.Next(W), rand.Next(H));
+                    timer.Start();
                 }
             }
             switch (way)
