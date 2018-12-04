@@ -27,30 +27,6 @@ namespace MyGameSnake
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            foreach (var item in snake)
-            {
-                //snake[item.X, item.Y] = (int)Figures.StartPosition; 
-                //snake[item.X, item.Y] = (int)Figures.Barrier;
-            } 
-            int[,] my = new int[H, W];
-            for (int i = 0; i < H; i++)
-            {
-                for (int j = 0; j < W; j++)
-                {
-                    if (rand.Next(100) > 70)
-                        my[i, j] = (int)Figures.Barrier;
-                    else
-                        my[i, j] = (int)Figures.EmptySpace;
-                }
-            }
-            var random = new Random(unchecked((int)DateTime.Now.Millisecond));
-            my[random.Next(H), random.Next(W)] = (int)Figures.StartPosition;
-            my[random.Next(H), random.Next(W)] = (int)Figures.Destination;
-            StartGame();
-        }
-
-        private void StartGame()
-        {
             timer.Interval = 200; // таймер срабатывает раз в 200 милисекунд
             timer.Tick += new EventHandler(Timer1_Tick);
             timer.Start(); // запускаем таймер
@@ -88,6 +64,7 @@ namespace MyGameSnake
             // запоминаем координаты головы змеи
             int x = snake[0].X, y = snake[0].Y;
             if (x <= 0 || y <= 0)
+
             {
                 timer.Stop();
                 DialogResult result = MessageBox.Show("Game Over!", "Information", MessageBoxButtons.YesNo);
