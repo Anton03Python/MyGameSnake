@@ -14,8 +14,9 @@ namespace MyGameSnake
     {
         Timer timer = new Timer();
         Random rand = new Random((int)DateTime.Now.Ticks & 0x0000FFFF);
-        int W = 80, H = 60;
+        int W, H;
         int S = 10;
+        int[,] map;
         List<Coord> snake = new List<Coord>();
         Coord apple; // координаты яблока
         int way = 0; // направление движения змеи: 0 - вверх, 1 - вправо, 2 - вниз, 3 - влево
@@ -27,6 +28,8 @@ namespace MyGameSnake
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            
+
             timer.Interval = 200; // таймер срабатывает раз в 200 милисекунд
             timer.Tick += new EventHandler(Timer1_Tick);
             timer.Start(); // запускаем таймер
@@ -34,6 +37,8 @@ namespace MyGameSnake
             snake.Add(new Coord(W / 2, H / 2));
             snake.Add(new Coord(W / 2, H / 1));
             apple = new Coord(rand.Next(W), rand.Next(H)); // координаты яблока
+
+            
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
