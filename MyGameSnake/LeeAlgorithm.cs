@@ -1,159 +1,228 @@
-﻿using System;
+﻿using MyGameSnake;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MyGameSnake
+namespace Finder
 {
-    class LeeAlgorithm
+    public class LeeAlgorithm
     {
-        int width;
-        int height;
-        int wall = 99;
-        int[,] map;
-        List<Point> wave = new List<Point>();
+        public int[,] ArrayGraph { get; private set; }
+        /// <summary>
+        /// Начало пути с конца списка
+        /// </summary>
+        public List<Tuple<int, int>> Path { get; private set; }
+        public int Width { get; private set; }
+        public int Heidth { get; private set; }
+        public bool PathFound { get; private set; }
+        public int LengthPath { get { return Path.Count; } }
 
-        public LeeAlgorithm(int width, int height)
+        private int _step;
+        private bool _finishingCellMarked;
+        private int _finishPointI;
+        private int _finishPointJ;
+
+        /// <summary>
+        /// Инициализирует новый экземпляр объекта с полем и указанием начальной точки
+        /// </summary>
+        public LeeAlgorithm(int startX, int startY, int[,] array)
         {
-            this.width = width;
-            this.height = height;
-            map = new int[width, height];
+            ArrayGraph = array;
+            Width = ArrayGraph.GetLength(0);
+            Heidth = ArrayGraph.GetLength(1);
+            SetStarCell(startX, startY);
+            PathFound = PathSearch();
+        }
 
-            //инициализируем карту
-            for (int i = 0; i < width; i++)
+        /// <summary>
+        /// Инициализирует новый экземпляр объекта с полем. Начальной точка установлена в массиве
+        /// </summary>
+        public LeeAlgorithm(int[,] array)
+        {
+            ArrayGraph = array;
+            Width = ArrayGraph.GetLength(0);
+            Heidth = ArrayGraph.GetLength(1);
+            int startX;
+            int startY;
+            FindStartCell(out startX, out startY);
+            SetStarCell(startX, startY);
+            PathFound = PathSearch();
+
+        }
+
+        private void FindStartCell(out int startX, out int startY)
+        {
+            int w = Width;
+            int h = Heidth;
+
+            for (int i = 0; i < w; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < h; j++)
                 {
-                    map[i, j] = -1;
+                    if (ArrayGraph[i, j] == (int)Figures.StartPosition)
+                    {
+                        startX = i;
+                        startY = j;
+                        return;
+                    }
                 }
             }
-            //заполнение границ карты препятствиями
-            for (int i = 0; i < width; i++)
-            {
-                map[i, 0] = wall;
-                map[width - 1, i] = wall;
-            }
-            for (int i = 0; i < height; i++)
-            {
-                map[0, i] = wall;
-                map[i, height - 1] = wall;
-            }
+            throw new AggregateException("Нет начальной точки");
         }
 
-        public void Block(int x, int y)
+        private void SetStarCell(int startX, int startY)
         {
-            //заполняем карту препятствиями
-            map[y, x] = wall;
+            if (startX > this.ArrayGraph.GetLength(0) || startX < 0)
+                throw new ArgumentException("Неправильная координата x");
+            if (startY > this.ArrayGraph.GetLength(1) || startY < 0)
+                throw new ArgumentException("Неправильная координата x");
+            //Пометить стартовую ячейку d:= 0
+            _step = 0;
+            ArrayGraph[startX, startY] = _step;
         }
 
-        public void FindPath(int x, int y, int nx, int ny)
+        private bool PathSearch()
         {
-            if (map[y, x] == wall || map[ny, nx] == wall)
+            if (WavePropagation())
+                if (RestorePath())
+                    return true;
+
+            return false;
+        }
+
+        // Есть. Ортогональный путь
+        // Todo. Ортогонально-диагональный путь
+
+        /// <summary>
+        /// Распространение волны
+        /// </summary>
+        /// <returns></returns>
+        private bool WavePropagation()
+        {
+            //ЦИКЛ
+            //  ДЛЯ каждой ячейки loc, помеченной числом d
+            //    пометить все соседние свободные непомеченные ячейки числом d + 1
+            //  КЦ
+            //  d := d + 1
+            //ПОКА(финишная ячейка не помечена) И(есть возможность распространения волны)
+
+            int w = Width;
+            int h = Heidth;
+
+            bool finished = false;
+            do
             {
-                Console.WriteLine("Вы выбрали препятствие");
-                return;
-            }
-
-            //волновой алгоритм поиска пути (заполнение значений достижимости) начиная от конца пути
-            int[,] cloneMap = (int[,])map.Clone();
-            List<Point> oldWave = new List<Point>();
-            oldWave.Add(new Point(nx, ny));
-            int nstep = 0;
-            map[ny, nx] = nstep;
-
-            int[] dx = { 0, 1, 0, -1 };
-            int[] dy = { -1, 0, 1, 0 };
-
-            while (oldWave.Count > 0)
-            {
-                nstep++;
-                wave.Clear();
-                foreach (Point i in oldWave)
+                for (int i = 0; i < w; i++)
                 {
-                    for (int d = 0; d < 4; d++)
+                    for (int j = 0; j < h; j++)
                     {
-                        nx = i.x + dx[d];
-                        ny = i.y + dy[d];
-
-
-                        if (map[ny, nx] == -1)
+                        if (ArrayGraph[i, j] == _step)
                         {
-                            wave.Add(new Point(nx, ny));
-                            map[ny, nx] = nstep;
+                            // Пометить все соседние свободные непомеченные ячейки числом d + 1
+                            if (i != w - 1)
+                                if (ArrayGraph[i + 1, j] == (int)Figures.EmptySpace) ArrayGraph[i + 1, j] = _step + 1;
+                            if (j != h - 1)
+                                if (ArrayGraph[i, j + 1] == (int)Figures.EmptySpace) ArrayGraph[i, j + 1] = _step + 1;
+                            if (i != 0)
+                                if (ArrayGraph[i - 1, j] == (int)Figures.EmptySpace) ArrayGraph[i - 1, j] = _step + 1;
+                            if (j != 0)
+                                if (ArrayGraph[i, j - 1] == (int)Figures.EmptySpace) ArrayGraph[i, j - 1] = _step + 1;
+
+                            // Путь до финиша проложен
+                            if (i < w - 1)
+                                if (ArrayGraph[i + 1, j] == (int)Figures.Destination)
+                                {
+                                    _finishPointI = i + 1;
+                                    _finishPointJ = j;
+                                    finished = true;
+                                }
+                            if (j < h - 1)
+                                if (ArrayGraph[i, j + 1] == (int)Figures.Destination)
+                                {
+                                    _finishPointI = i;
+                                    _finishPointJ = j + 1;
+                                    finished = true;
+                                }
+                            if (i > 0)
+                                if (ArrayGraph[i - 1, j] == (int)Figures.Destination)
+                                {
+                                    _finishPointI = i - 1;
+                                    _finishPointJ = j;
+                                    finished = true;
+                                }
+                            if (j > 0)
+                                if (ArrayGraph[i, j - 1] == (int)Figures.Destination)
+                                {
+                                    _finishPointI = i;
+                                    _finishPointJ = j - 1;
+                                    finished = true;
+                                }
                         }
+
                     }
                 }
-                oldWave = new List<Point>(wave);
-            }
-            //traceOut(); //посмотреть распространение волны
+                _step++;
+                //ПОКА(финишная ячейка не помечена) И(есть возможность распространения волны)
+            } while (!finished && _step < w * h);
+            _finishingCellMarked = finished;
+            return finished;
+        }
 
-            //волновйо алгоритм поиска пути начиная от начала
-            bool flag = true;
-            wave.Clear();
-            wave.Add(new Point(x, y));
-            while (map[y, x] != 0)
+        /// <summary>
+        ///  Восстановление пути
+        /// </summary>
+        /// <returns></returns>
+        private bool RestorePath()
+        {
+            // ЕСЛИ финишная ячейка помечена
+            // ТО
+            //   перейти в финишную ячейку
+            //   ЦИКЛ
+            //     выбрать среди соседних ячейку, помеченную числом на 1 меньше числа в текущей ячейке
+            //     перейти в выбранную ячейку и добавить её к пути
+            //   ПОКА текущая ячейка — не стартовая
+            //   ВОЗВРАТ путь найден
+            // ИНАЧЕ
+            //   ВОЗВРАТ путь не найден
+            if (!_finishingCellMarked)
+                return false;
+
+            int w = Width;
+            int h = Heidth;
+            int i = _finishPointI;
+            int j = _finishPointJ;
+            Path = new List<Tuple<int, int>>();
+            AddToPath(i, j);
+
+            do
             {
-                flag = true;
-                for (int d = 0; d < 4; d++)
-                {
-                    nx = x + dx[d];
-                    ny = y + dy[d];
-                    if (map[y, x] - 1 == map[ny, nx])
+                if (i < w - 1)
+                    if (ArrayGraph[i + 1, j] == _step - 1)
                     {
-                        x = nx;
-                        y = ny;
-                        wave.Add(new Point(x, y));
-                        flag = false;
-                        break;
+                        AddToPath(++i, j);
                     }
-                }
-                if (flag)
-                {
-                    Console.WriteLine("Пути нет!");
-                    break;
-                }
-            }
-
-            map = cloneMap;
-
-            wave.ForEach(delegate (Point i)
-            {
-                map[i.y, i.x] = 0;
-            });
+                if (j < h - 1)
+                    if (ArrayGraph[i, j + 1] == _step - 1)
+                    {
+                        AddToPath(i, ++j);
+                    }
+                if (i > 0)
+                    if (ArrayGraph[i - 1, j] == _step - 1)
+                    {
+                        AddToPath(--i, j);
+                    }
+                if (j > 0)
+                    if (ArrayGraph[i, j - 1] == _step - 1)
+                    {
+                        AddToPath(i, --j);
+                    }
+                _step--;
+            } while (_step != 0);
+            return true;
         }
 
-        struct Point
+        private void AddToPath(int x, int y)
         {
-            public Point(int x, int y)
-                : this()
-            {
-                this.x = x;
-                this.y = y;
-            }
-            public int x;
-            public int y;
-        }
-
-        public void TraceOut() // вывод таблицы
-        {
-            string m = null;
-            Console.Write("   ");
-            for (int i = 0; i < height; i++) // Вывод верхней нумерации
-            {
-                Console.Write(i > 9 ? i + " " : i + "  ");
-            }
-            Console.WriteLine();
-            for (int i = 0; i < width; i++)
-            {
-                m = i > 9 ? i + " " : i + "  "; // вывод боковой нумерации
-                for (int j = 0; j < height; j++)
-                {
-                    m += map[i, j] > 9 || map[i, j] < 0 ? map[i, j] + " " : map[i, j] + "  ";
-                }
-                Console.WriteLine(m);
-            }
+            Path.Add(new Tuple<int, int>(x, y));
         }
     }
-}
 }

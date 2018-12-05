@@ -16,9 +16,7 @@ namespace MyGameSnake
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            Common.Form = new Form1();
-            Application.Run(Common.Form);
+            Application.Run(new Form1());
         }
     }
 }
