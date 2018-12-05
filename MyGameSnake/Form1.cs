@@ -70,63 +70,64 @@ namespace MyGameSnake
                 if (result == DialogResult.Yes)
                 {
                     snake.Clear();
-                    snake.Add(new Coord(W / 2, H / 3));
-                    snake.Add(new Coord(W / 2, H / 2));
-                    snake.Add(new Coord(W / 2, H / 1));
-                    snake[0].X = W;
-                    snake[0].Y = H;
+                    snake.Add(new Coord(W / 2, H - 10));
+                    snake.Add(new Coord(W / 2, H - 9));
+                    snake.Add(new Coord(W / 2, H - 8));
                     apple = new Coord(rand.Next(W), rand.Next(H));
                     timer.Start();
                 }
             }
-            switch (way)
-            {
-                case 0:
-                    y--;
-                    if (y < 0)
-                        y = H - 1;
-                    break;
-                case 1:
-                    x++;
-                    if (x >= W)
-                        x = 0;
-                    break;
-                case 2:
-                    y++;
-                    if (y >= H)
-                        y = 0;
-                    break;
-                case 3:
-                    x--;
-                    if (x < 0)
-                        x = W - 1;
-                    break;
-            }
-            Coord c = new Coord(x, y); // сегмент с новыми координатами головы
-            snake.Insert(0, c); // вставляем его в начало списка сегментов змеи(змея выросла на один сегмент)
-            if (snake[0].X == apple.X && snake[0].Y == apple.Y) // если координаты головы и яблока совпали
-                apple = new Coord(rand.Next(W), rand.Next(H)); // располагаем яблоко в новых случайных координатах
-            else 
-                snake.RemoveAt(snake.Count - 1);
-            for (int i = 1; i < snake.Count; i++)
-            {
-                if (snake[0].X == snake[i].X && snake[0].Y == snake[i].Y)
+
+                switch (way)
                 {
-                    timer.Stop();
-                    DialogResult result = MessageBox.Show("Game Over!", "Information", MessageBoxButtons.YesNo);   
-                    if (result == DialogResult.Yes)
-                    {
-                        snake.Clear();
-                        timer.Start();
-                        snake.Add(new Coord(W / 2, H - 3));
-                        snake.Add(new Coord(W / 2, H - 1));
-                        snake.Add(new Coord(W / 2, H - 1));
-                        apple = new Coord(rand.Next(W), rand.Next(H));
-                    }
+                    case 0:
+                        y--;
+                        if (y < 0)
+                            y = H - 1;
+                        break;
+                    case 1:
+                        x++;
+                        if (x >= W)
+                            x = 0;
+                        break;
+                    case 2:
+                        y++;
+                        if (y >= H)
+                            y = 0;
+                        break;
+                    case 3:
+                        x--;
+                        if (x < 0)
+                            x = W - 1;
+                        break;
                 }
-                
-            }
-            Invalidate(); //идет вызов Program_Paint
+                Coord c = new Coord(x, y); // сегмент с новыми координатами головы
+                snake.Insert(0, c); // вставляем его в начало списка сегментов змеи(змея выросла на один сегмент)
+                if (snake[0].X == apple.X && snake[0].Y == apple.Y) // если координаты головы и яблока совпали
+                    apple = new Coord(rand.Next(W), rand.Next(H)); // располагаем яблоко в новых случайных координатах
+                else
+                    snake.RemoveAt(snake.Count - 1);
+                for (int i = 1; i < snake.Count; i++)
+                {
+                    if (snake[0].X == snake[i].X && snake[0].Y == snake[i].Y)
+                    {
+                        timer.Stop();
+                        DialogResult result = MessageBox.Show("Game Over!", "Information", MessageBoxButtons.YesNo);
+                        if (result == DialogResult.Yes)
+                        {
+                            snake.Clear();
+                            timer.Start();
+                            snake.Add(new Coord(W / 2, H - 3));
+                            snake.Add(new Coord(W / 2, H - 1));
+                            snake.Add(new Coord(W / 2, H - 1));
+                            apple = new Coord(rand.Next(W), rand.Next(H));
+
+                        }
+                    }
+
+                }
+                Invalidate(); //идет вызов Program_Paint
+            
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
